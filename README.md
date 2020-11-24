@@ -1,21 +1,20 @@
-
-
-It is a python project concerning the application of the MVA algorithm in the analysis of physics data. 
+Python project concerning the application of the MVA algorithm in the analysis of physics data. 
 BDT algorithm is part of the XGBOOST library
 The numpy and pandas library are required to run the xgboost package
 
-Before start install the following packages: numpy, pandas, matplotlib, xgboost 
+Before starting install the following packages: numpy, pandas, matplotlib, xgboost 
 
 To run:
-python3 run.py
+run.py
 
-Output: output.log - logger 
-and performance plots (are not saved by default)
+Output:
+    output.log - logger 
+    performance plots (not saved by default)
 
 Description:
 
 The training.csv file contains signal and background data. Each event is flagged by 's' for the signal and 'b' for the background (Label). 
-The sample is split to train and test sample (default: 0.5)
+The sample is split to train and test sample (default: 0.5).
 BDT options are in the option.txt file. Leave them unless you know what you are doing.
 
 
@@ -27,7 +26,7 @@ read_features(data) - reading variables, input variables have been choosen durin
 
 prepare_train_data_matrix(data_train, feature_names), prepare_test_data_matrix(data_test, feature_names) - preparing data matrix (data for xgboost)
 
-read_option() - read opiton from option file
+read_option() - read option from option file
 read_num_of_trees() - silly function to read number of tree 
 
 train_classifier(param, train_data_matrix, num_trees) - training of classifier
@@ -36,4 +35,4 @@ plot_performance_plots(test_data_matrix, booster) - plot performances plot
 
 CM_analysis(test_data_matrix, booster) - matrices calculation and plotting addition performances plot
 
-def plot_correlation_matrix(data_train) - plotting correlation matrix
+plot_correlation_matrix(data_train) - plotting correlation matrix
