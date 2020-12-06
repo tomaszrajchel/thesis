@@ -39,6 +39,12 @@ def read_features(data):
     feature_names = [*data.columns[1:3], *data.columns[4 : data.shape[1]]]
     return feature_names
 
+def prepare_data_matrix(data, feature_names):
+    data_matrix = xgb.DMatrix(
+        data=data[feature_names], label=data.Label.cat.codes, missing=-999.0, feature_names=feature_names
+    )
+    return data_matrix
+
 
 def prepare_train_data_matrix(data_train, feature_names):
     train_data_matrix = xgb.DMatrix(
