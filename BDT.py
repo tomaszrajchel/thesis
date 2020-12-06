@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 import statistics as stc
 from itertools import combinations
 
@@ -10,7 +11,7 @@ import xgboost as xgb
 import matplotlib.pyplot as plt
 import seaborn as sn
 
-SPLIT_FRACTION = 0.5
+logger = logging.getLogger(__name__)
 
 
 def read_data(input_path):
@@ -19,23 +20,23 @@ def read_data(input_path):
     return data
 
 
-def prepare_test_data(data):
+def prepare_test_data(data, split_fraction):
     sample_size = data.shape
     data["Label"] = data.Label.astype("category")
-    data_test = data[int(sample_size[0] * SPLIT_FRACTION) :]
+    data_test = data[int(sample_size[0] * split_fraction) :]
     return data_test
 
 
-def prepare_train_data(data):
+def prepare_train_data(data, split_fraction):
     sample_size = data.shape
     data["Label"] = data.Label.astype("category")
-    data_train = data[: int(sample_size[0] * SPLIT_FRACTION)]
+    data_train = data[: int(sample_size[0] * split_fraction)]
     return data_train
 
 
 def read_features(data):
     # skipping 1st column - index and 3rd - label
-    feature_names = [*data.columns[1:2], *data.columns[4 : data.shape[1]]]
+    feature_names = [*data.columns[1:3], *data.columns[4 : data.shape[1]]]
     return feature_names
 
 
@@ -53,46 +54,18 @@ def prepare_test_data_matrix(data_test, feature_names):
     return test_data_matrix
 
 
-def read_option():
-    options = []
-    with open("option.txt") as f:
-        for line in f:
-            (key, val) = line.split()
-            if val.isnumeric():
-                if key == "max_depth":
-                    options.append((key, int(val)))
-                else:
-                    options.append((key, float(val)))
-            else:
-                options.append((key, val))
-
-    options.append(("eval_metric", "logloss"))
-    options.append(("eval_metric", "rmse"))
-    options.append(("eval_metric", "auc"))
-
-    return options
-
-
-def read_num_of_trees():
-    num_trees = 300
-    return num_trees
-
-
-def train_classifier(param, train_data_matrix, num_trees):
-    booster = xgb.train(param, train_data_matrix, num_trees)
-    return booster
-
-
 def plot_performance_plots(test_data_matrix, booster):
     plt.rcParams.update({"figure.max_open_warning": 0})
     predictions = booster.predict(test_data_matrix)
 
+    # All events
     plt.figure()
     plt.hist(predictions, bins=np.linspace(0, 1, 50), histtype="step", color="darkgreen", label="All events")
     plt.xlabel("Prediction from BDT", fontsize=12)
     plt.ylabel("Events", fontsize=12)
     plt.legend(frameon=False)
 
+    # Signal vs background events
     plt.figure()
     plt.hist(
         predictions[test_data_matrix.get_label().astype(bool)],
@@ -114,7 +87,6 @@ def plot_performance_plots(test_data_matrix, booster):
 
 
 def CM_analysis(test_data_matrix, booster):
-    messages = []
     predictions = booster.predict(test_data_matrix)
 
     # CM
@@ -180,21 +152,18 @@ def CM_analysis(test_data_matrix, booster):
 
     roc_area = float(booster.eval(test_data_matrix)[-8:-1])
 
-    messages.append("   CM :  Area of the surface under the ROC curve: {}".format(roc_area))
-    messages.append(
-        "   CM :  Area of the surface under the best cut (ROC 1 - (specificity : sensitivity)): {}".format(best_ROC_ss)
-    )
-    messages.append("   CM :  Best cut (ROC 1): {}".format(best_cut_ss))
-    messages.append(
-        "   CM :  Area of the surface under the best cut (ROC 2 - (precision : sensitivity)): {}".format(best_ROC_ps)
-    )
-    messages.append("   CM :  Best cut (ROC 2): {}".format(best_cut_ps))
-    messages.append("   CM :  Distance to the 1:1 line (precision = specificity): {}".format(best_ROC_distance))
-    messages.append("   CM :  Best cut (dist): {}".format(best_cut_distance))
+    logger.info(f"Confusion matrix: ")
+    logger.info(f"CM:  Area of the surface under the ROC curve: {roc_area}")
+    logger.info(f"CM:  Area of the surface under the best cut (ROC 1 - (specificity : sensitivity)): {best_ROC_ss}")
+    logger.info(f"CM:  Best cut (ROC 1): {best_cut_ss}")
+    logger.info(f"CM:  Area of the surface under the best cut (ROC 2 - (precision : sensitivity)): {best_ROC_ps}")
+    logger.info(f"CM:  Best cut (ROC 2): {best_cut_ps}")
+    logger.info(f"CM:  Distance to the 1:1 line (precision = specificity): {best_ROC_distance}")
+    logger.info(f"CM:  Best cut (dist): {best_cut_distance}")
 
     cut_list = [best_cut_ss, best_cut_ps, best_cut_distance]
 
-    messages.append("   CM :  Best average cut: {}".format(stc.mean(cut_list)))
+    logger.info(f"CM:  Best average cut: {stc.mean(cut_list)}")
 
     plt.figure()
     plt.title("Receiver Operating Characteristic")
@@ -225,10 +194,8 @@ def CM_analysis(test_data_matrix, booster):
 
     xgb.plot_importance(booster, grid=False)
 
-    return messages
-
 
 def plot_correlation_matrix(data_train):
+    plt.figure()
     corrMatrix = data_train.corr()
     sn.heatmap(corrMatrix, annot=True, cmap="YlGnBu", fmt=".2g")
-    factor = len(data_train[data_train.Label == "s"]) / len(data_train[data_train.Label == "b"])

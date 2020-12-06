@@ -1,5 +1,9 @@
+# training
 numpy
 pandas
 matplotlib
 xgboost 
 seaborn
+# explaining
+shap
+lime

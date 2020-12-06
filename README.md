@@ -26,9 +26,6 @@ read_features(data) - reading variables, input variables have been choosen durin
 
 prepare_train_data_matrix(data_train, feature_names), prepare_test_data_matrix(data_test, feature_names) - preparing data matrix (data for xgboost)
 
-read_option() - read option from option file
-read_num_of_trees() - silly function to read number of tree 
-
 train_classifier(param, train_data_matrix, num_trees) - training of classifier
 
 plot_performance_plots(test_data_matrix, booster) - plot performances plot
