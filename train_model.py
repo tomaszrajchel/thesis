@@ -69,6 +69,7 @@ def main():
 
     plot_performance_plots(test_data_matrix, booster)
     CM_analysis(test_data_matrix, booster)
+    xgb.plot_importance(booster, grid=False)
     plot_correlation_matrix(data_train)
     plt.show()
 

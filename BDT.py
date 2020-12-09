@@ -198,8 +198,6 @@ def CM_analysis(test_data_matrix, booster):
     plt.ylabel("Specificity", fontsize=12)
     plt.legend(frameon=False)
 
-    xgb.plot_importance(booster, grid=False)
-
 
 def plot_correlation_matrix(data_train):
     plt.figure()
