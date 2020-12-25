@@ -22,7 +22,7 @@ read_data(input_path) - read input data file
 prepare_test_data and prepare_train_data - splitting data file 
 read_features(data) - reading variables, input variables have been choosen during preparation of input file
 
-** feature_names = [*data.columns[1:2], *data.columns[4:data.shape[1]]] - skipping 'label' variable since it does't take part in the training of classifier
+** feature_names = [*data.columns[1:3], *data.columns[4:data.shape[1]]] - skipping 'label' variable since it does't take part in the training of classifier
 
 prepare_train_data_matrix(data_train, feature_names), prepare_test_data_matrix(data_test, feature_names) - preparing data matrix (data for xgboost)
 

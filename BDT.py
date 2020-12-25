@@ -35,8 +35,9 @@ def prepare_train_data(data, split_fraction):
 
 
 def read_features(data):
-    # skipping 1st column - index and 3rd - label
-    feature_names = [*data.columns[1:3], *data.columns[4 : data.shape[1]]]
+    # skipping indices: 0-index, 3-label
+    # feature_names = ["DeltaR_lab23"] # baseline
+    feature_names = [*data.columns[1:3], *data.columns[4:data.shape[1]]]
     return feature_names
 
 def prepare_data_matrix(data, feature_names):
@@ -60,7 +61,7 @@ def prepare_test_data_matrix(data_test, feature_names):
     return test_data_matrix
 
 
-def plot_performance_plots(test_data_matrix, booster):
+def plot_performance_plots(test_data_matrix, booster, save=False):
     plt.rcParams.update({"figure.max_open_warning": 0})
     predictions = booster.predict(test_data_matrix)
 
@@ -73,7 +74,8 @@ def plot_performance_plots(test_data_matrix, booster):
     plt.xlabel("Model Output", fontsize=12)
     plt.ylabel("Events", fontsize=12)
     plt.legend(frameon=False)
-    #plt.savefig("img/bdt_predictions_testdata.png")
+    if save:
+        plt.savefig("img/bdt_predictions_testdata.png")
 
     # Signal vs background events
     plt.figure()
@@ -95,10 +97,11 @@ def plot_performance_plots(test_data_matrix, booster):
     plt.xlabel("Model Output", fontsize=12)
     plt.ylabel("Events", fontsize=12)
     plt.legend(frameon=False)
-    plt.savefig("img/bdt_labeled_predictions_testdata.png")
+    if save:
+        plt.savefig("img/bdt_labeled_predictions_testdata.png")
 
 
-def CM_analysis(test_data_matrix, booster):
+def CM_analysis(test_data_matrix, booster, save=False):
     predictions = booster.predict(test_data_matrix)
 
     # CM
@@ -186,7 +189,8 @@ def CM_analysis(test_data_matrix, booster):
     plt.axis('scaled')
     plt.xlim([0,1])
     plt.ylim([0,1])
-    # plt.savefig("img/ROC.png")
+    if save:
+        plt.savefig("img/ROC.png")
 
     # plt.figure()
     # plt.step(specificity, sensitivity)
@@ -246,15 +250,32 @@ def CM_analysis(test_data_matrix, booster):
         sns.heatmap(confusion_matrix_normalized, annot=True, cmap="Blues", fmt=".2%", xticklabels=["s", "b"], yticklabels=["s", "b"], ax=ax[idx][1])
         ax[idx][1].set(xlabel="Actual class", ylabel="Predicted class")
 
-    # plt.savefig("img/confusion_matrix.png")
+    if save:
+        plt.savefig("img/confusion_matrix.png")
 
 
-def plot_correlation_matrix(data):
+def plot_correlation_matrix(data, save=False):
     fig = plt.figure()
-    plt.title(f" Pearson Correlation Coefficients")
+    plt.title(f"Pearson Correlation Coefficients")
     corrMatrix = data.corr()
     sns.heatmap(corrMatrix, annot=True, cmap="vlag", fmt=".2f", vmin=-1.0, vmax=1.0)
     plt.xticks(rotation=30, horizontalalignment="right")
     plt.subplots_adjust(right=1.0, bottom=0.17, top=0.95)
     fig.set_size_inches(14,12)
-    # plt.savefig("img/data_correlation.png")
+    if save:
+        plt.savefig("img/data_correlation.png")
+
+def plot_training(evals, evals_result, save=False):
+    fig = plt.figure()
+    values = evals_result[evals[0][1]]["auc"]
+    # values = list(map(lambda x: 1-x, evals_result[evals[0][1]]["auc"]))
+    plt.plot(range(0,len(values)), values)
+    plt.xlim([0,len(values)])
+    plt.ylim([0.98,1])
+    # plt.yscale("log")
+    plt.title(f"Training Performance")
+    plt.xlabel("Epoch")
+    plt.ylabel("AUC - Test Data")
+    plt.grid()
+    if save:
+        plt.savefig("img/training_plot.png")

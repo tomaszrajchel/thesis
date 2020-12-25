@@ -7,7 +7,7 @@ import datetime
 import xgboost as xgb
 import numpy as np
 import matplotlib.pyplot as plt
-from options import option_list
+from parameters import params
 from BDT import (
     prepare_train_data,
     prepare_test_data,
@@ -18,6 +18,7 @@ from BDT import (
     plot_performance_plots,
     CM_analysis,
     plot_correlation_matrix,
+    plot_training,
 )
 
 NUM_TREES = 300
@@ -62,15 +63,24 @@ def main():
     train_data_matrix = prepare_train_data_matrix(data_train, feature_names)
     test_data_matrix = prepare_test_data_matrix(data_test, feature_names)
 
-    booster = xgb.train(option_list, train_data_matrix, NUM_TREES)
+    # Disabled for speed
+    evals_result = {}
+    evals = [(test_data_matrix, 'test')]
+    booster = xgb.train(
+        params,
+        dtrain=train_data_matrix,
+        num_boost_round=NUM_TREES,
+        evals=evals,
+        evals_result=evals_result,
+        verbose_eval=False
+    )
     booster.save_model("./output/booster.bin")
-
     logger.info(f"{booster.eval(test_data_matrix)}")
-
-    plot_performance_plots(test_data_matrix, booster)
-    #CM_analysis(test_data_matrix, booster)
-    #xgb.plot_importance(booster, grid=False)
-    #plot_correlation_matrix(data[feature_names])
+    plot_training(evals, evals_result)
+    # plot_performance_plots(test_data_matrix, booster)
+    # CM_analysis(test_data_matrix, booster)
+    # xgb.plot_importance(booster, grid=False)
+    # plot_correlation_matrix(data[feature_names])
     plt.show()
 
 
