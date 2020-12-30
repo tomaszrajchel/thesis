@@ -37,7 +37,7 @@ def prepare_train_data(data, split_fraction):
 def read_features(data):
     # skipping indices: 0-index, 3-label
     # feature_names = ["DeltaR_lab23"] # baseline
-    feature_names = [*data.columns[1:3], *data.columns[4:data.shape[1]]]
+    feature_names = [*data.columns[1:3], *data.columns[4:]]
     return feature_names
 
 def prepare_data_matrix(data, feature_names):
@@ -279,3 +279,54 @@ def plot_training(evals, evals_result, save=False):
     plt.grid()
     if save:
         plt.savefig("img/training_plot.png")
+
+def cross_validate(k, params, num_trees, metrics=None):
+    # Setup
+    input_path = os.path.dirname(os.path.abspath(__file__)) + "/input/"
+    data = read_data(input_path)
+    data["Label"] = data.Label.astype("category")
+    size = data.shape[0]
+    feature_names = read_features(data)
+    eval_history = []
+
+    # Shuffle
+    data = data.sample(frac=1)
+    
+    for c in range(k):
+        # Split
+        i1 = int((c/k)*size)
+        i2 = int((c+1)/k*size)
+        test_data = data[i1:i2]
+        train_data = pd.concat([data[0:i1], data[i2:-1]])
+        # print(f"i1={i1}\ti2={i2} test_size={test_data.shape}, train_size={train_data.shape}")
+        test_data_matrix = prepare_test_data_matrix(test_data, feature_names)
+        train_data_matrix = prepare_train_data_matrix(train_data, feature_names)
+
+        # Train
+        booster = xgb.train(
+            params,
+            dtrain=train_data_matrix,
+            num_boost_round=num_trees,
+        )
+        eval_history.append(booster.eval(test_data_matrix))
+
+    # Calculate metrics
+    if metrics is None:
+        metrics = {metric:[] for metric in params["eval_metric"]}
+    for line in eval_history:
+        eval_strings = line.split("\t")[1:]
+        for eval_string in eval_strings:
+            metrics[eval_string[5:-9]].append(float(eval_string[-8:-1]))
+    
+    return metrics
+    
+
+def describe_metrics(metrics):
+    mean_metrics = {key:np.mean(val) for key,val in metrics.items()}
+    std_metrics = {key:np.std(val) for key,val in metrics.items()}
+    rstd_metrics = {key:100*np.std(val)/np.mean(val) for key,val in metrics.items()}
+
+    logger.info(metrics)
+    logger.info(f"mean:\t{mean_metrics}")
+    logger.info(f"std:\t{std_metrics}")
+    logger.info(f"rstd:\t{rstd_metrics}")

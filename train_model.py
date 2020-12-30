@@ -19,6 +19,8 @@ from BDT import (
     CM_analysis,
     plot_correlation_matrix,
     plot_training,
+    cross_validate,
+    describe_metrics,
 )
 
 NUM_TREES = 300
@@ -76,12 +78,23 @@ def main():
     )
     booster.save_model("./output/booster.bin")
     logger.info(f"{booster.eval(test_data_matrix)}")
-    plot_training(evals, evals_result)
+    # plot_training(evals, evals_result)
     # plot_performance_plots(test_data_matrix, booster)
     # CM_analysis(test_data_matrix, booster)
     # xgb.plot_importance(booster, grid=False)
     # plot_correlation_matrix(data[feature_names])
-    plt.show()
+    # plt.show()
+
+    # # Multiple cross-validation
+    # logger.info(f"Used features {len(feature_names)}: {feature_names}")
+    # for it in range(10):
+    #     if it == 0:
+    #         metrics = cross_validate(k=5, params=params, num_trees=NUM_TREES)
+    #     else:
+    #         metrics = cross_validate(k=5, params=params, num_trees=NUM_TREES, metrics=metrics)
+    # describe_metrics(metrics)
+
+
 
 
 if __name__ == "__main__":
