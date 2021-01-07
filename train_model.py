@@ -79,11 +79,11 @@ def main():
     booster.save_model("./output/booster.bin")
     logger.info(f"{booster.eval(test_data_matrix)}")
     # plot_training(evals, evals_result)
-    # plot_performance_plots(test_data_matrix, booster)
+    plot_performance_plots(test_data_matrix, booster)
     # CM_analysis(test_data_matrix, booster)
     # xgb.plot_importance(booster, grid=False)
     # plot_correlation_matrix(data[feature_names])
-    # plt.show()
+    plt.show()
 
     # # Multiple cross-validation
     # logger.info(f"Used features {len(feature_names)}: {feature_names}")

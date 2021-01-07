@@ -81,22 +81,24 @@ def plot_performance_plots(test_data_matrix, booster, save=False):
     plt.figure()
     plt.hist(
         predictions[test_data_matrix.get_label().astype(bool)],
-        bins=100,
+        bins=100, # np.logspace(np.log10(1e-6),np.log10(1), 100),
         histtype="step",
         color="green",
         label="signal",
     )
     plt.hist(
         predictions[~(test_data_matrix.get_label().astype(bool))],
-        bins=100,
+        bins=100, # np.logspace(np.log10(1e-6),np.log10(1), 100),
         histtype="step",
         color="lightgray",
         label="background",
     )
+    # plt.xscale("log")
+    # plt.yscale("log")
     plt.title("BDT Predictions")
     plt.xlabel("Model Output", fontsize=12)
     plt.ylabel("Events", fontsize=12)
-    plt.legend(frameon=False)
+    plt.legend(frameon=False) # plt.legend(frameon=False, loc="upper left")
     if save:
         plt.savefig("img/bdt_labeled_predictions_testdata.png")
 
